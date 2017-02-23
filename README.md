@@ -5,17 +5,19 @@
 </p>
 
 
-StringWriter is a modified program that allows to patch strings in the raw Wii U memory. This is a project that was created with an educational purpose in mind ~~and for helping a friend~~, despite knowing that there are limitations to how raw data can be displayed as a string. But it stays well accurate once you know how to use it.
+StringWriter is a program that allows to patch strings in the raw Wii U memory. This is a project that was created with an educational purpose in mind ~~and for helping a friend~~.
 
 ###Information
 
-Reading the memory with this program displays the raw data in three forms simultaneously; _ASCII_, _byte_, and _unicode_ in their own text boxes. You could easily edit your ascii or unicode text and convert them to byte for easy conversion and injection.
+This program can read the Wii U memory in 3 forms; _ASCII_, _Byte_, and _Unicode_. You could easily edit your _ASCII_ or _Unicode_ text and convert them to byte for easy conversion and injection.
 
-However if you're editing certain areas with bytes below \1F, **DO NOT** convert ascii or unicode to byte, or else it will \00 them out in the byte text box after the conversion. Possible lost bytes before the conversion can be visible on text with the pilcrow sign (¶).
+Bytes between **\00 - \1F** are automatically nulled when converting from _Byte_ to _ASCII_/_Unicode_, since it's nature can't be easily handled. Thus handle this with care, converting _ASCII_/_Unicode_ to _Byte_ **with null bytes (¶)** will convert some of the data to /00s, and accuracy is lost. Possible lost bytes before the conversion can be visible on text with the pilcrow sign (¶).
 
-This is why strings are **not** always reliable for injecting, because of the some unreadable control chars that are near impossible to convert to byte before injection.Therefore, it's better for reading data _with your eyes_ if the pilcrow is visible in your text. Although the displayed byte in its own text box is extremely accurate and recommended to basing all edits from there.
+Pressing the **Apply** button will inject only the _Byte_ data. To inject _ASCII_/_Unicode_, convert them to _Byte_ first. Also, injecting the data only injects the length of the bytes in the textbox, so the **Byte Length:** does not apply for injecting, but only for reading.
 
-It's also recommended to keep in mind that the read byte length and the current byte length that should be matched before injecting data . However if you're experienced enough and you don't feel the need to, that should be fine.
+When reading and then modifying the data, it's recommended to match the **Current byte length** and the **Read byte length** before injecting the data. Without proper care, you will shift the data and inject it improperly. 
+
+
 
 ###Requirements
 

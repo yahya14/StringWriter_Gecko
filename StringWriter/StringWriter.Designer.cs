@@ -71,6 +71,7 @@
             this.readUnicodeLabel = new System.Windows.Forms.Label();
             this.aboutButton = new System.Windows.Forms.Button();
             this.tipLabel = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.addrNumericUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.readSizeNumericUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.endNumericUpDown)).BeginInit();
@@ -123,6 +124,7 @@
             this.writerButton.Size = new System.Drawing.Size(86, 23);
             this.writerButton.TabIndex = 7;
             this.writerButton.Text = "Apply";
+            this.toolTip1.SetToolTip(this.writerButton, "Only to the length the bytes are applied");
             this.writerButton.UseVisualStyleBackColor = true;
             this.writerButton.Click += new System.EventHandler(this.writerButton_Click);
             // 
@@ -639,5 +641,6 @@
         private System.Windows.Forms.Label readUnicodeLabel;
         private System.Windows.Forms.Button aboutButton;
         private System.Windows.Forms.Label tipLabel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

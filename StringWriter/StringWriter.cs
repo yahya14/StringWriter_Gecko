@@ -145,7 +145,7 @@ namespace StringWriter
                 //converts byte array to string, then injects data to memory and handles potential error
                 try
                 {
-                    writeStringSimple((uint)(addrNumericUpDown.Value), Encoding.GetEncoding("iso-8859-1").GetString(sa));
+                    writeString((uint)(addrNumericUpDown.Value), Encoding.GetEncoding("iso-8859-1").GetString(sa));
                     msg("Success!");
                 }
                 catch (Exception)
@@ -187,7 +187,7 @@ namespace StringWriter
                 //inject empty array
                 try
                 {
-                    writeStringSimple((uint)(addrNumericUpDown.Value), Encoding.UTF8.GetString(az));
+                    writeString((uint)(addrNumericUpDown.Value), Encoding.ASCII.GetString(az));
                     msg("Success!");
                 }
                 catch (Exception)
@@ -328,113 +328,81 @@ namespace StringWriter
             return Math.Floor(val / roundNum) * roundNum;
         }
 
-        //a modified function to write string into memory as long as you like. CREDITS to Lean.
-        private void writeStringSimple(uint offset, string s)
+        //rewritten writeString for effeciency
+        private void writeString(uint address, string s)
         {
-            writeStringSimple(offset, s, s.Length);
-        }
-        private void writeStringSimple(uint offset, string s, int length) 
-        {
-            uint push = 0;
-            int pos = 0;
-            if (offset % 4 != 0)
-            {
-                for (int i = 0; i < offset % 4; i++)
-                    push = push << 8 | s[pos++];
-                
-                if (offset % 4 == 1)
-                    push = gecko.peek(offset - offset % 4) & 0xFF000000 | push;
-
-                if (offset % 4 == 2)
-                    push = gecko.peek(offset - offset % 4) & 0xFFFF0000 | push;
-                
-                if (offset % 4 == 3)
-                    push = gecko.peek(offset - offset % 4) & 0xFFFFFF00 | push;
-                
-                gecko.poke(offset, push);
-                offset += offset % 4;
-            }
-            for (; pos < s.Length; offset += 4)
-            {
-                push = 0;
-                if (pos + 1 == s.Length)
-                {
-                    push = (uint)s[pos++] << 24 | gecko.peek(offset) & 0x00FFFFFF;
-                    gecko.poke(offset, push);
-                    offset += 1;
-                    break;
-                }
-                if (pos + 2 == s.Length)
-                {
-                    push = s[pos++];
-                    push = push << 8 | s[pos++];
-                    push = push << 16 | gecko.peek(offset) & 0x0000FFFF;
-                    gecko.poke(offset, push);
-                    offset += 2;
-                    break;
-                }
-                if (pos + 3 == s.Length)
-                {
-                    push = s[pos++];
-                    push = push << 8 | s[pos++];
-                    push = push << 8 | s[pos++];
-                    push = push << 8 | gecko.peek(offset) & 0x000000FF;
-                    gecko.poke(offset, push);
-                    break;
-                }
-                for (int i = 0; i < 4; i++)
-                    push = push << 8 | s[pos++];
-
-                gecko.poke(offset, push);
-            }
-            for (; pos < length; offset += 4, pos += 4)
-            {
-                if (pos % 4 == 1)
-                {
-                    gecko.poke(offset, gecko.peek(offset) & 0xFF000000);
-                    pos--;
-                    continue;
-                }
-                if (pos % 4 == 2)
-                {
-                    gecko.poke(offset, gecko.peek(offset) & 0xFFFF0000);
-                    pos--; pos--;
-                    continue;
-                }
-                if (pos % 4 == 3)
-                {
-                    gecko.poke(offset, gecko.peek(offset) & 0xFFFFFF00);
-                    pos--; pos--; pos--;
-                    continue;
-                }
-                if (pos + 1 == length)
-                {
-                    push = gecko.peek(offset) & 0x00FFFFFF;
-                    gecko.poke(offset, push);
-                    offset += 1;
-                    pos++;
-                    break;
-                }
-                if (pos + 2 == length)
-                {
-                    push = gecko.peek(offset) & 0x0000FFFF;
-                    gecko.poke(offset, push);
-                    offset += 2;
-                    pos += 2;
-                    break;
-                }
-                if (pos + 3 == length)
-                {
-                    push = gecko.peek(offset) & 0x000000FF;
-                    gecko.poke(offset, push);
-                    offset += 3;
-                    pos += 3;
-                    break;
-                }
-                gecko.poke(offset, 0);
-            }
+            writeString(address, s, s.Length);
         }
 
+        private void writeString(uint address, string s, int len)
+        {
+            uint raddress = address - (address % 4);
+
+            //dumps first address from memory into byte array
+            MemoryStream faddr = new MemoryStream();
+
+            gecko.Dump(raddress, raddress + 4, faddr);
+
+            faddr.Seek(0, SeekOrigin.Begin);
+            byte[] fb = faddr.GetBuffer();
+
+            //closes stream properly
+            faddr.Close();
+
+            //stack remaining chars to the char array
+            for (uint i = address % 4; i > 0; i--)
+            {
+                s = (char)fb[i - 1] + s;
+                len++;
+            }
+
+            //define final char array
+            char[] c = new char[len];
+            for (int i = 0; i < s.Length && i < len; i++)
+                c[i] = s[i];
+
+            //poke all of the char array until it goes out of range and the exception is thrown
+            uint val = 0;
+            for (uint i = 0; i < len; i += 4)
+            {
+                try
+                {
+                    val = 0;
+                    for (int j = 0; j < 4; j++)
+                        val += (uint)(c[j + i] << (8 * (3 - j)));
+
+                    gecko.poke(raddress + i, val);
+                }
+                //catch the end of the char array and peek the final address
+                catch (IndexOutOfRangeException)
+                {
+                    //dumps first address from memory into byte array
+                    MemoryStream laddr = new MemoryStream();
+
+                    gecko.Dump(raddress + i, raddress + i + 4, laddr);
+
+                    laddr.Seek(0, SeekOrigin.Begin);
+                    byte[] stringbyte = laddr.GetBuffer();
+
+                    //null bytes depending on remainder
+                    for (int j = 0; j < len % 4; j++)
+                        stringbyte[j] = 0;
+
+                    //add the remaining chars to val in uint form
+                    uint laddress = 0;
+                    for (int j = 0; j < 4; j++)
+                        laddress += (uint)(stringbyte[j] << (8 * (3 - j)));
+
+                    val += laddress;
+
+                    gecko.poke(raddress + i, val);
+
+                    //closes stream properly
+                    laddr.Close();
+                }
+            }
+        }
+        
         //changes byte font colors
         private void byteFontColors()
         {

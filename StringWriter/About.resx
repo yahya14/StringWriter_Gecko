@@ -118,15 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="projectLabel.Text" xml:space="preserve">
-    <value>Information: This program is designed to ease the amount of effort to
-apply string patches into the raw Wii U memory. This project is built
-from many creditable sources into a tool for the usage of viewing and
-modifying the Wii U memory that is usable to the experienced user.
+    <value>Information:
+StringWriter is designed to ease the amount of effort to inject
+strings into the raw Wii U memory. It allows you to view and modify
+the Wii U memory in 3 other variations; Bytes, ASCII, and Unicode.
 
-Although if you're looking for a better viewer program that would go
-with StringWriter as a seperate companion, please use Chadderz's
-tcpgeckodotnet program that you can download from my readme
-StringWriter repository.
+For more information and guide on using this program for string edits
+in the ram, Please visit my github repository and go to my README:
 
 </value>
   </data>
