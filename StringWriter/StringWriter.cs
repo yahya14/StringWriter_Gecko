@@ -115,7 +115,8 @@ namespace StringWriter
 
                     //convert byte to byte string
                     string hex = BitConverter.ToString(ba);
-                    byteRTB.Text = hex.Replace("-", "");
+                    hex = hex.Replace("-", "");
+                    byteRTB.Text = hex;
 
                     //change font colors to organize data every 4 bytes
                     //stringFontColors();
