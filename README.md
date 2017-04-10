@@ -20,8 +20,10 @@ When reading and then modifying the data, it's recommended to match the **Curren
 ## What are these three types of Data?
 
 ASCII - Represents a character/letter from the American Standard code, relative to the byte value. The size of each ASCII character is 8 bit (aka bytes with 2 digits).
+
 Byte - Represents a numerical value with base 16, instead of the common base 10. Sizes of bytes can vary from 8 bit to 32 bit on the Wii U.
-unicode - Represets a character like ASCII, but the size of each character is 16-bit instead (bytes with 4 digits). The bigger size is to accomodate the support for all languages and special characters.
+
+Unicode - Represets a character like ASCII, but the size of each character is 16-bit instead (bytes with 4 digits). The bigger size is to accomodate the support for all languages and special characters.
 
 Also, In most cases the Wii U uses ASCII for most ram mods. Unicode is likely used for only game texts instead.
 
