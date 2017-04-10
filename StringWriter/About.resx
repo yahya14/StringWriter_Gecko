@@ -119,12 +119,13 @@
   </resheader>
   <data name="projectLabel.Text" xml:space="preserve">
     <value>Information:
-StringWriter is designed to ease the amount of effort to inject
-strings into the raw Wii U memory. It allows you to view and modify
-the Wii U memory in 3 other variations; Bytes, ASCII, and Unicode.
+StringWriter is a custom Wii U ram viewer/injector that allows you to
+inject strings in ASCII or Unicode. This was personally created for
+Splatonka, who encouraged me to make this possible. Thanks to the
+bud for giving me something to do out of boredom.
 
-For more information and guide on using this program for string edits
-in the ram, Please visit my github repository and go to my README:
+For more information and guides on using this program for string
+edits in the ram, Please visit my README page on Github:
 
 </value>
   </data>

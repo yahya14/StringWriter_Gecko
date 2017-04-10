@@ -40,17 +40,17 @@
             // 
             this.TitleLabel.AutoSize = true;
             this.TitleLabel.Font = new System.Drawing.Font("Tahoma", 12.25F);
-            this.TitleLabel.Location = new System.Drawing.Point(42, 20);
+            this.TitleLabel.Location = new System.Drawing.Point(27, 19);
             this.TitleLabel.Name = "TitleLabel";
-            this.TitleLabel.Size = new System.Drawing.Size(261, 21);
+            this.TitleLabel.Size = new System.Drawing.Size(298, 21);
             this.TitleLabel.TabIndex = 0;
-            this.TitleLabel.Text = "String Writer-r2 (Stability Update)";
+            this.TitleLabel.Text = "String Writer-r3 (Highlighting Location)";
             // 
             // creditsLabel
             // 
             this.creditsLabel.AutoSize = true;
             this.creditsLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
-            this.creditsLabel.Location = new System.Drawing.Point(33, 79);
+            this.creditsLabel.Location = new System.Drawing.Point(34, 78);
             this.creditsLabel.Name = "creditsLabel";
             this.creditsLabel.Size = new System.Drawing.Size(276, 13);
             this.creditsLabel.TabIndex = 0;
@@ -60,7 +60,7 @@
             // 
             this.creatorLabel.AutoSize = true;
             this.creatorLabel.Font = new System.Drawing.Font("Tahoma", 12.25F);
-            this.creatorLabel.Location = new System.Drawing.Point(120, 42);
+            this.creatorLabel.Location = new System.Drawing.Point(121, 42);
             this.creatorLabel.Name = "creatorLabel";
             this.creatorLabel.Size = new System.Drawing.Size(95, 21);
             this.creatorLabel.TabIndex = 0;
@@ -70,16 +70,16 @@
             // 
             this.projectLabel.AutoSize = true;
             this.projectLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
-            this.projectLabel.Location = new System.Drawing.Point(15, 108);
+            this.projectLabel.Location = new System.Drawing.Point(15, 107);
             this.projectLabel.Name = "projectLabel";
-            this.projectLabel.Size = new System.Drawing.Size(324, 104);
+            this.projectLabel.Size = new System.Drawing.Size(331, 117);
             this.projectLabel.TabIndex = 0;
             this.projectLabel.Text = resources.GetString("projectLabel.Text");
             // 
             // LinksourceLabel
             // 
             this.LinksourceLabel.AutoSize = true;
-            this.LinksourceLabel.Location = new System.Drawing.Point(15, 208);
+            this.LinksourceLabel.Location = new System.Drawing.Point(15, 216);
             this.LinksourceLabel.Name = "LinksourceLabel";
             this.LinksourceLabel.Size = new System.Drawing.Size(238, 13);
             this.LinksourceLabel.TabIndex = 1;
@@ -92,7 +92,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(355, 249);
+            this.ClientSize = new System.Drawing.Size(355, 252);
             this.Controls.Add(this.LinksourceLabel);
             this.Controls.Add(this.projectLabel);
             this.Controls.Add(this.creditsLabel);

@@ -5,19 +5,27 @@
 </p>
 
 
-StringWriter is a program that allows you to patch strings in the raw Wii U memory. This is a project that was created with an educational purpose in mind ~~and for helping a friend~~.
+StringWriter is a program that allows you to patch strings in the raw Wii U memory. This is a project that was created with an educational purpose in mind *and for helping a friend*.
 
 ###Information
 
 This program can read the Wii U memory in 3 forms; _ASCII_, _Byte_, and _Unicode_. You can easily edit your _ASCII_ or _Unicode_ text and convert them to byte for easy conversion and injection.
 
-Bytes between **\00 - \1F** are automatically nulled when converting from _Byte_ to _ASCII_/_Unicode_, since it's nature can't be easily handled. Thus handle this with care, converting _ASCII_/_Unicode_ to _Byte_ **with null bytes (¶)** will convert some of the data to /00s, and accuracy is lost. Possible lost bytes before the conversion can be visible on the text with the pilcrow sign **(¶)**.
+Bytes between **\00 - \1F** are automatically nulled as **\00** when converting from _Byte_ to _ASCII_/_Unicode_, since it's nature can't be easily handled. Thus handle this with care, converting _ASCII_/_Unicode_ to _Byte_ **with nulled bytes (¶)** will convert some of the data to \00s, and accuracy is lost. Possible lost bytes before the conversion can be visible on the text with the pilcrow sign **(¶)**.
 
-Pressing the **Apply** button will inject only the _Byte_ data. To inject _ASCII_/_Unicode_, convert them to _Byte_ first. Also, injecting the data only injects the length of the bytes in the textbox, so the **Byte Length:** does not apply for injecting, but only for reading. However, **Byte Length:** applies to the **Apply 0s within range** button.
+Pressing the **Apply** button will inject only the _Byte_ data. To inject _ASCII_/_Unicode_, convert them to _Byte_ first. Also, injecting the data only injects the length of the bytes in the textbox, so the **Byte Length:**, value on the left of the form, does not apply for injecting, but only for reading. However, **Byte Length:** does apply to the **Apply 0s within range** button.
 
-When reading and then modifying the data, it's recommended to match the **Current byte length** and the **Read byte length** before injecting the data. Without proper care, you will shift the data and inject it improperly. 
+When reading and then modifying the data, it's recommended to match the **Current byte length** and the **Read byte length** before injecting the data. Without proper care, you will shift the data and inject it improperly.
 
-###Requirements
+##What are these three types of Data?
+
+ASCII - Represents a character/letter from the American Standard code, relative to the byte value. The size of each ASCII character is 8 bit (aka bytes with 2 digits).
+Byte - Represents a numerical value with base 16, instead of the common base 10. Sizes of bytes can vary from 8 bit to 32 bit on the Wii U.
+unicode - Represets a character like ASCII, but the size of each character is 16-bit instead (bytes with 4 digits). The bigger size is to accomodate the support for all languages and special characters.
+
+Also, In most cases the Wii U uses ASCII for most ram mods. Unicode is likely used for only game texts instead.
+
+##Requirements
 
 + Windows Vista or higher (Mac and Linux users, use Wine)
 + [.NET Framework 4.5.2](http://go.microsoft.com/fwlink/?LinkId=328843)

@@ -12,7 +12,7 @@ namespace StringWriter
         public static TCPGecko gecko = null;
         private string bytePrev;
 
-        //variables for when the form loads for sizing and location
+        //variables for sizing GUI objects in Form_Load
         private int FormScale;
         private int boxWidth, AutoWidth;
         private int sHeight, bHeight, uHeight;
@@ -26,6 +26,11 @@ namespace StringWriter
         public StringWriteForm()
         {
             InitializeComponent();
+
+            //Handlers for highlighting relative location
+            byteRTB.SelectionChanged += new EventHandler(byteRTB_SelectionChanged);
+            ASCIIRTB.SelectionChanged += new EventHandler(ASCIIRTB_SelectionChanged);
+            unicodeRTB.SelectionChanged += new EventHandler(unicodeRTB_SelectionChanged);
         }
 
         private void ConnectButton_Click(object sender, EventArgs e)
@@ -71,59 +76,62 @@ namespace StringWriter
             if (gecko != null)
             {
                 //create memory stream
-                MemoryStream stream = new MemoryStream();
-                uint baddress = (uint)(addrNumericUpDown.Value);
-                uint eaddress = 0;
-
-                //select radio buttons for length
-                uint i;
-                uint diff = (uint)(endNumericUpDown.Value - addrNumericUpDown.Value);
-                if (readRadioButton.Checked == true)
+                using (MemoryStream stream = new MemoryStream())
                 {
-                    eaddress = (uint)(readSizeNumericUpDown.Value);
-                    i = 256 - (256 - eaddress);
+                    uint baddress = (uint)(addrNumericUpDown.Value);
+                    uint eaddress = 0;
+
+                    //select radio buttons for length
+                    uint i;
+                    uint diff = (uint)(endNumericUpDown.Value - addrNumericUpDown.Value);
+                    if (readRadioButton.Checked == true)
+                    {
+                        eaddress = (uint)(readSizeNumericUpDown.Value);
+                        i = 256 - (256 - eaddress);
+                    }
+                    else
+                    {
+                        eaddress = diff;
+                        i = 256 - (256 - diff);
+                    }
+
+                    //dumps data from memory
+                    gecko.Dump(baddress, baddress + eaddress, stream);
+
+                    //define byte array
+                    stream.Seek(0, SeekOrigin.Begin);
+                    byte[] stringbyte = stream.GetBuffer();
+
+                    byte[] ba = new byte[i];
+                    Array.Copy(stringbyte, ba, i);
+
+                    //convert bytes to ASCII
+                    string sa = ASCIIDecoder(ba);
+                    ASCIIRTB.Text = sa;
+
+                    //convert bytes to unicode
+                    string ua = unicodeDecoder(ba);
+                    unicodeRTB.Text = ua;
+
+                    //convert byte to byte string
+                    string hex = BitConverter.ToString(ba);
+                    byteRTB.Text = hex.Replace("-", "");
+
+                    //change font colors to organize data every 4 bytes
+                    //stringFontColors();
+                    byteFontColors();
+
+                    //update read length numbers
+                    readASCIILengthLabel.Text = "0x" + (sa.Length).ToString("X");
+                    readByteLengthLabel.Text = "0x" + ((int)(roundLowest(hex.Length, 2) / 2)).ToString("X");
+                    readUnicodeLengthLabel.Text = "0x" + (ua.Length * 2).ToString("X");
                 }
-                else
-                {
-                    eaddress = diff;
-                    i = 256 - (256 - diff);
-                }
-
-                //dumps data from memory
-                gecko.Dump(baddress, baddress + eaddress, stream);
-
-                //define byte array
-                stream.Seek(0, SeekOrigin.Begin);
-                byte[] stringbyte = stream.GetBuffer();
-                byte[] ba = new byte[i];
-                Array.Copy(stringbyte, ba, i);
-
-                //convert bytes to ASCII
-                string sa = ASCIIDecoder(ba);
-                ASCIIRTB.Text = sa;
-
-                //convert bytes to unicode
-                string ua = unicodeDecoder(ba);
-                unicodeRTB.Text = ua;
-
-                //convert byte to byte string
-                string hex = BitConverter.ToString(ba);
-                hex = hex.Replace("-", "");
-                byteRTB.Text = hex;
-
-                //change font colors to organize data every 4 bytes
-                /*stringFontColors();*/
-                byteFontColors();
-
-                //update read length numbers
-                readASCIILengthLabel.Text = "0x" + (sa.Length).ToString("X");
-                readByteLengthLabel.Text = "0x" + ((int)(roundLowest(hex.Length, 2) / 2)).ToString("X");
-                readUnicodeLengthLabel.Text = "0x" + (ua.Length * 2).ToString("X");
             }
             else
                 msg("No conn...");
         }
 
+        //HANDLERS////
         //injects bytes to ram
         private void writerButton_Click(object sender, EventArgs e)
         {
@@ -176,18 +184,16 @@ namespace StringWriter
             if (gecko != null)
             {
                 //create empty array based on specified length
-                uint ZeroSize;
+                int ZeroSize;
                 if (readRadioButton.Checked == true)
-                    ZeroSize = (uint)(readSizeNumericUpDown.Value);
+                    ZeroSize = (int)(readSizeNumericUpDown.Value);
                 else
-                    ZeroSize = (uint)(endNumericUpDown.Value - addrNumericUpDown.Value);
-
-                byte[] az = new byte[ZeroSize];
+                    ZeroSize = (int)(endNumericUpDown.Value - addrNumericUpDown.Value);
 
                 //inject empty array
                 try
                 {
-                    writeString((uint)(addrNumericUpDown.Value), Encoding.ASCII.GetString(az));
+                    writeString((uint)(addrNumericUpDown.Value), "", ZeroSize);
                     msg("Success!");
                 }
                 catch (Exception)
@@ -286,7 +292,6 @@ namespace StringWriter
         private void unicodeRTB_TextChanged(object sender, EventArgs e)
         {
             currentUnicodeLengthLabel.Text = "0x" + (unicodeRTB.TextLength * 2).ToString("X");
-
         }
 
         //toggles auto updater for ascii to byte by tieing the handlers to the button converters
@@ -306,7 +311,6 @@ namespace StringWriter
             byteRTB_TextChanged(sender, e);
         }
 
-
         //toggles auto updater for unicode to byte by tieing the handlers to the button converters
         private void unicodeAutoCheck_CheckedChanged(object sender, EventArgs e)
         {
@@ -318,17 +322,67 @@ namespace StringWriter
             else unicodeRTB.TextChanged -= new EventHandler(unicode2byteButton_Click);
         }
 
+        //selection handlers
+        private void ASCIIRTB_SelectionChanged(object sender, EventArgs e)
+        {
+            if (ASCIIRTB.Focused)
+            {
+                byteRTB.Select(ASCIIRTB.SelectionStart * 2, ASCIIRTB.SelectionLength * 2);
+                unicodeRTB.Select(ASCIIRTB.SelectionStart / 2, ASCIIRTB.SelectionLength / 2);
+            }
+        }
+
+        private void byteRTB_SelectionChanged(object sender, EventArgs e)
+        {
+            if (byteRTB.Focused)
+            {
+                ASCIIRTB.Select((int)Math.Ceiling((decimal)byteRTB.SelectionStart / 2), byteRTB.SelectionLength / 2);
+                unicodeRTB.Select((int)Math.Ceiling((decimal)byteRTB.SelectionStart / 4), byteRTB.SelectionLength / 4);
+            }
+        }
+
+        private void unicodeRTB_SelectionChanged(object sender, EventArgs e)
+        {
+            if (unicodeRTB.Focused)
+            {
+                ASCIIRTB.Select(unicodeRTB.SelectionStart * 2, unicodeRTB.SelectionLength * 2);
+                byteRTB.Select(unicodeRTB.SelectionStart * 4, unicodeRTB.SelectionLength * 4);
+            }
+        }
+
         //font colors changed to display organized 32 bit data when leaving the text box
-        private void ASCIIRTB_Leave(object sender, EventArgs e) { /*stringFontColors();*/ }
+        private void ASCIIRTB_Leave(object sender, EventArgs e) { /*byteFontColors();*/ }
         private void byteRTB_Leave(object sender, EventArgs e) { byteFontColors(); }
 
+        //timer that runs once to revert read button message to the original
+        private void msgTimer_Tick(object sender, EventArgs e)
+        {
+            readButton.Text = "Read";
+            readButton.Font = new Font(readButton.Font.FontFamily, 8.25f);
+            msgTimer.Stop();
+        }
+
+        //handles the values of the numeric boxes from reading wrong ranges when clicking the read button
+        private void addrnumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            if (!endNumericUpDown.Focused)
+                if (addrNumericUpDown.Value >= endNumericUpDown.Value) endNumericUpDown.Value = addrNumericUpDown.Value + 0x1;
+        }
+
+        private void endNumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            if (!addrNumericUpDown.Focused)
+                if (endNumericUpDown.Value <= addrNumericUpDown.Value) addrNumericUpDown.Value = endNumericUpDown.Value - 0x1;
+        }
+
+        //FUNCTIONS////
         //simplified method for rounding numbers to the lowest given number
         private decimal roundLowest(decimal val, int roundNum)
         {
             return Math.Floor(val / roundNum) * roundNum;
         }
 
-        //rewritten writeString for effeciency
+        //function to upload string into the memory
         private void writeString(uint address, string s)
         {
             writeString(address, s, s.Length);
@@ -336,71 +390,9 @@ namespace StringWriter
 
         private void writeString(uint address, string s, int len)
         {
-            uint raddress = address - (address % 4);
-
-            //dumps first address from memory into byte array
-            MemoryStream faddr = new MemoryStream();
-
-            gecko.Dump(raddress, raddress + 4, faddr);
-
-            faddr.Seek(0, SeekOrigin.Begin);
-            byte[] fb = faddr.GetBuffer();
-
-            //closes stream properly
-            faddr.Close();
-
-            //stack remaining chars to the char array
-            for (uint i = address % 4; i > 0; i--)
-            {
-                s = (char)fb[i - 1] + s;
-                len++;
-            }
-
-            //define final char array
-            char[] c = new char[len];
-            for (int i = 0; i < s.Length && i < len; i++)
-                c[i] = s[i];
-
-            //poke all of the char array until it goes out of range and the exception is thrown
-            uint val = 0;
-            for (uint i = 0; i < len; i += 4)
-            {
-                try
-                {
-                    val = 0;
-                    for (int j = 0; j < 4; j++)
-                        val += (uint)(c[j + i] << (8 * (3 - j)));
-
-                    gecko.poke(raddress + i, val);
-                }
-                //catch the end of the char array and peek the final address
-                catch (IndexOutOfRangeException)
-                {
-                    //dumps first address from memory into byte array
-                    MemoryStream laddr = new MemoryStream();
-
-                    gecko.Dump(raddress + i, raddress + i + 4, laddr);
-
-                    laddr.Seek(0, SeekOrigin.Begin);
-                    byte[] stringbyte = laddr.GetBuffer();
-
-                    //null bytes depending on remainder
-                    for (int j = 0; j < len % 4; j++)
-                        stringbyte[j] = 0;
-
-                    //add the remaining chars to val in uint form
-                    uint laddress = 0;
-                    for (int j = 0; j < 4; j++)
-                        laddress += (uint)(stringbyte[j] << (8 * (3 - j)));
-
-                    val += laddress;
-
-                    gecko.poke(raddress + i, val);
-
-                    //closes stream properly
-                    laddr.Close();
-                }
-            }
+            byte[] b = Encoding.GetEncoding("iso-8859-1").GetBytes(s);
+            using (MemoryStream stream = new MemoryStream(b))
+                gecko.Upload(address, address + (uint)len, stream);
         }
         
         //changes byte font colors
@@ -425,7 +417,6 @@ namespace StringWriter
                     sb2.Append(byteRTB.Text[i]);
                 }
                 sb2.Append("\\par\r\n}\r\n");
-
                 byteRTB.Rtf = sb2.ToString();
             }
             else
@@ -439,20 +430,20 @@ namespace StringWriter
             {
                 //string text box
                 StringBuilder sb = new StringBuilder();
-            sb.Append("{\\rtf1\\ansi\\ansicpg1250\\deff0\\deflang1050{\\fonttbl{\\f0\\fnil\\fcharset238 Microsoft Sans Serif;}}\r\n{\\colortbl ;\\red0\\green0\\blue254;\\red250\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\f0\\fs17");
-            string[] col = new string[] { "\\cf1 ", "\\cf2 " };
-            int idxCol = 0;
-            for (int i = 0; i < ASCIIRTB.TextLength; i++)
-            {
-                if (i % 4 == 0)
+                sb.Append("{\\rtf1\\ansi\\ansicpg1250\\deff0\\deflang1050{\\fonttbl{\\f0\\fnil\\fcharset238 Microsoft Sans Serif;}}\r\n{\\colortbl ;\\red0\\green0\\blue254;\\red250\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\f0\\fs17");
+                string[] col = new string[] { "\\cf1 ", "\\cf2 " };
+                int idxCol = 0;
+                for (int i = 0; i < ASCIIRTB.TextLength; i++)
                 {
-                    sb.Append(col[idxCol]);
-                    idxCol = (idxCol + 1) % 2;
+                    if (i % 4 == 0)
+                    {
+                        sb.Append(col[idxCol]);
+                        idxCol = (idxCol + 1) % 2;
+                    }
+                    sb.Append(ASCIIRTB.Text[i]);
                 }
-                sb.Append(ASCIIRTB.Text[i]);
-            }
-            sb.Append("\\par\r\n}\r\n");
-            ASCIIRTB.Rtf = sb.ToString();
+                sb.Append("\\par\r\n}\r\n");
+                ASCIIRTB.Rtf = sb.ToString();
             }
             else
                 msg("Format error.");
@@ -464,7 +455,6 @@ namespace StringWriter
             if (Regex.IsMatch(input, @"[^0-9A-Fa-f]"))
             {
                 byteRTB.BackColor = Color.FromArgb(255, 200, 200);
-
                 return true;
             }
             else
@@ -508,23 +498,25 @@ namespace StringWriter
             return cstring;
         }
 
-        //replaces periods etc, before converting ascii or unicode to byte array (pure data is lost as in the undisplayable control chars)
+        //replaces periods and control codes bytes to 00, before converting ascii or unicode to byte array (pure data is lost from bytes 01 to 1F)
+        public byte[] ReplaceBytes(byte[] src, string replace, string replacewith)
+        {
+            return ReplaceBytes(src, replace, replace, replacewith);
+        }
         public byte[] ReplaceBytes(byte[] src, string replace, string replacetwo, string replacewith)
         {
             string hex = BitConverter.ToString(src);
             hex = hex.Replace("-", "");
             hex = hex.Replace(replace, replacewith);
-            hex = hex.Replace(replacetwo, replacewith);
 
-            //weird place to put define the variable...
+            if (replace != replacetwo)
+                hex = hex.Replace(replacetwo, replacewith);
+
+            //For storing the hexstring for something else (awkwardly placed here but effective)
             bytePrev = hex;
 
-            byte[] bytes = new byte[hex.Length / 2];
-            for (int i = 0; i < hex.Length; i += 2)
-                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-            return bytes;
+            return hex2Bytes(hex);
         }
-
         //conversion from hex to byte array
         public byte[] hex2Bytes(string hex)
         {
@@ -544,32 +536,10 @@ namespace StringWriter
 
         private void aboutButton_Click(object sender, EventArgs e)
         {
-            About about = new About();
-            about.Show();
+            new About().Show();
         }
 
-        //timer that runs once to revert read button message to the original
-        private void msgTimer_Tick(object sender, EventArgs e)
-        {
-            readButton.Text = "Read";
-            readButton.Font = new Font(readButton.Font.FontFamily, 8.25f);
-            msgTimer.Stop();
-        }
-
-        //handles the values of the numeric boxes from reading wrong ranges when clicking the read button
-        private void addrnumericUpDown_ValueChanged(object sender, EventArgs e)
-        {
-            if (!endNumericUpDown.Focused)
-                if (addrNumericUpDown.Value >= endNumericUpDown.Value) endNumericUpDown.Value = addrNumericUpDown.Value + 0x1;
-        }
-
-        private void endNumericUpDown_ValueChanged(object sender, EventArgs e)
-        {
-            if (!addrNumericUpDown.Focused)
-                if (endNumericUpDown.Value <= addrNumericUpDown.Value) addrNumericUpDown.Value = endNumericUpDown.Value - 0x1;
-        }
-
-        //gui area
+        //INTERFACE///
         //allows user to press the return key to connect
         private void IPBox_KeyDown(object sender, KeyEventArgs e)
         {
@@ -580,6 +550,11 @@ namespace StringWriter
         //loads default values for form sizing and the IP address
         private void StringWriteForm_Load(object sender, EventArgs e)
         {
+            //bug fix
+            ASCIIRTB.AutoWordSelection = false;
+            byteRTB.AutoWordSelection = false;
+            unicodeRTB.AutoWordSelection = false;
+
             //GUI
             //abbreviations such as s = string, b = byte, and u = unicode in variables are objects for scaling mathmatically depending on the form size
             //every variable stores default size and location of sizable objects

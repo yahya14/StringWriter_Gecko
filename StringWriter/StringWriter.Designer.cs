@@ -228,6 +228,7 @@
             // 
             this.ASCIIRTB.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.ASCIIRTB.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
+            this.ASCIIRTB.HideSelection = false;
             this.ASCIIRTB.Location = new System.Drawing.Point(113, 91);
             this.ASCIIRTB.Name = "ASCIIRTB";
             this.ASCIIRTB.Size = new System.Drawing.Size(465, 83);
@@ -241,6 +242,7 @@
             this.byteRTB.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.byteRTB.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
             this.byteRTB.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.byteRTB.HideSelection = false;
             this.byteRTB.Location = new System.Drawing.Point(112, 199);
             this.byteRTB.Name = "byteRTB";
             this.byteRTB.Size = new System.Drawing.Size(465, 83);
@@ -314,6 +316,7 @@
             this.unicodeRTB.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.unicodeRTB.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
             this.unicodeRTB.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.unicodeRTB.HideSelection = false;
             this.unicodeRTB.Location = new System.Drawing.Point(112, 307);
             this.unicodeRTB.Name = "unicodeRTB";
             this.unicodeRTB.Size = new System.Drawing.Size(465, 72);
